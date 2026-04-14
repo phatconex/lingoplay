@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Miilingo - Level Up Your Vocabulary</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Include PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <link rel="icon" href="favicon.png" type="image/png">
+</head>
+
+<body>
+
+    <div class="app-container">
+        <!-- Header / Stats Bar -->
+        <header class="header">
+            <h2 style="margin:0; color: var(--primary-blue);">Miilingo</h2>
+        </header>
+
+        <div class="content-area">
+
+            <!-- Dashboard Screen -->
+            <div id="dashboard-screen" class="screen active">
+                <h1 style="text-align:center; font-size:32px; margin-top:24px;">Chào Mii, cậu đã chăm chỉ thêm 1 ngày
+                    rồi nhỉ</h1>
+                <p style="text-align:center; color: var(--text-secondary); margin-bottom: 24px;">Hôm nay thuộc hết từ
+                    vựng lum nha?</p>
+
+                <div style="text-align: center;">
+                    <button class="btn btn-outline" style="width:100%; max-width:400px;" onclick="openInputBox()">+ Add
+                        Vocabulary</button>
+                </div>
+
+                <div class="dashboard-menu">
+                    <div class="menu-card" id="btn-mc" onclick="startMultipleChoice()">
+                        <h3>🎯 Multiple Choice</h3>
+                        <p>Test your knowledge with 4 options.</p>
+                    </div>
+                    <div class="menu-card" id="btn-spell" onclick="startSpelling()">
+                        <h3>✍️ Spelling</h3>
+                        <p>Listen or read and type the exact word.</p>
+                    </div>
+                    <div class="menu-card" id="btn-audio" onclick="startAudioMatch()">
+                        <h3>🎵 Audio Match</h3>
+                        <p>Catch the correct floating translation.</p>
+                    </div>
+                    <div class="menu-card" id="btn-rush" onclick="startRushMode()">
+                        <h3>⚡ Typing Rush</h3>
+                        <p>Type fast before time runs out!</p>
+                    </div>
+                    <div class="menu-card" id="btn-speaking" onclick="startSpeaking()">
+                        <h3>🗣️ Speaking Practice</h3>
+                        <p>Translate sentences aloud & flip.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Screen -->
+            <div id="input-screen" class="screen">
+                <h2>Add Vocabulary</h2>
+                <p class="text-secondary">Paste your list format: "English : Vietnamese" or upload a PDF</p>
+
+                <div style="margin-bottom: 16px; text-align: center;">
+                    <input type="file" id="pdf-input" accept=".pdf" style="display:none;"
+                        onchange="handlePDFUpload(event)">
+                    <button class="btn btn-blue" style="width:100%; max-width:400px;"
+                        onclick="document.getElementById('pdf-input').click()">
+                        📄 Auto-Import from PDF
+                    </button>
+                    <p style="font-size: 12px; color: var(--text-secondary); margin-top: 8px;">Upload a Quizlet exported
+                        PDF to auto-extract words.</p>
+                </div>
+
+                <textarea id="vocab-input" placeholder="apple : quả táo&#10;banana : quả chuối"></textarea>
+                <div class="footer" style="padding:0; border:none; margin-top: auto;">
+                    <button class="btn btn-outline" onclick="showScreen('dashboard-screen')">Cancel</button>
+                    <button class="btn btn-primary" onclick="saveVocabulary()">Save Words</button>
+                </div>
+            </div>
+
+            <!-- Multiple Choice Screen -->
+            <div id="mc-screen" class="screen">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <button class="btn btn-outline" style="padding: 8px 16px; font-size:14px;"
+                        onclick="endSession()">Quit</button>
+                    <div class="progress-container" style="margin:0 16px; flex:1;">
+                        <div class="progress-bar" id="mc-progress"></div>
+                    </div>
+                </div>
+
+                <div class="word-display">
+                    <p class="text-secondary" style="font-weight:bold; text-transform:uppercase;">Select the correct
+                        meaning</p>
+                    <div class="word-text" id="mc-word">Word</div>
+                </div>
+
+                <div class="option-grid" id="mc-options">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Spelling Screen -->
+            <div id="spelling-screen" class="screen">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <button class="btn btn-outline" style="padding: 8px 16px; font-size:14px;"
+                        onclick="endSession()">Quit</button>
+                    <div class="progress-container" style="margin:0 16px; flex:1;">
+                        <div class="progress-bar" id="spell-progress"></div>
+                    </div>
+                </div>
+
+                <div class="word-display" style="flex: 0;">
+                    <p class="text-secondary" style="font-weight:bold; text-transform:uppercase;">Translate this word
+                    </p>
+                    <div class="word-text" id="spell-meaning" style="font-size:32px; color: var(--primary-blue);">Ý
+                        nghĩa</div>
+                </div>
+
+                <div class="spell-input-container">
+                    <input type="text" id="spell-input" class="spell-input" placeholder="Type in English..."
+                        autocomplete="off">
+                </div>
+
+                <div class="footer" style="padding:0; border:none; margin-top: auto;">
+                    <button class="btn btn-primary" id="spell-check-btn" style="width:100%">Check</button>
+                </div>
+            </div>
+
+            <!-- Speaking Practice Screen -->
+            <div id="speaking-screen" class="screen">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <button class="btn btn-outline" style="padding: 8px 16px; font-size:14px;"
+                        onclick="endSession()">Quit</button>
+                    <div class="progress-container" style="margin:0 16px; flex:1;">
+                        <div class="progress-bar" id="speaking-progress"></div>
+                    </div>
+                </div>
+
+                <div class="word-display"
+                    style="flex: 1; display:flex; flex-direction:column; justify-content:center; cursor:pointer;"
+                    onclick="handleSpeakingAction()" id="speaking-flashcard">
+                    <p class="text-secondary" style="font-weight:bold; text-transform:uppercase; margin-bottom: 24px;">
+                        Translate this sentence aloud</p>
+                    <div class="word-text" id="speaking-vi-sentence"
+                        style="font-size:24px; color: var(--text-primary); line-height: 1.4; margin-bottom: 24px;">
+                        Vietnamese Sentence</div>
+
+                    <div id="speaking-en-container"
+                        style="visibility:hidden; opacity: 0; transition: opacity 0.3s; min-height: 100px;">
+                        <div class="word-text" id="speaking-en-sentence"
+                            style="font-size:24px; color: var(--primary-blue); line-height: 1.4; margin-bottom: 12px; font-weight: bold;">
+                            English Sentence</div>
+                        <div
+                            style="font-size: 16px; color: var(--text-secondary); background: var(--bg-secondary); padding: 8px; border-radius: 8px; display: inline-block;">
+                            <strong id="speaking-target-word" style="color: var(--primary-orange);">Word</strong> :
+                            <span id="speaking-target-meaning">Meaning</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="footer"
+                    style="padding:0; border:none; margin-top: auto; display: flex; flex-direction: column; gap: 8px; text-align:center;">
+                    <p style="color: var(--text-secondary); font-size: 14px; margin: 0;">Press <b
+                            style="background:#eee;padding:2px 6px;border-radius:4px;color:#333;">Space</b> to flip •
+                        Press <b style="background:#eee;padding:2px 6px;border-radius:4px;color:#333;">Enter</b> for
+                        next</p>
+                    <button class="btn btn-primary" id="btn-speaking-action" style="width:100%"
+                        onclick="handleSpeakingAction()">Flip</button>
+                </div>
+            </div>
+
+            <!-- Audio Match Screen -->
+            <div id="audio-screen" class="screen">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <button class="btn btn-outline" style="padding: 8px 16px; font-size:14px;"
+                        onclick="endSession()">Quit</button>
+                    <div class="progress-container" style="margin:0 16px; flex:1;">
+                        <div class="progress-bar" id="audio-progress"></div>
+                    </div>
+                </div>
+
+                <div style="text-align:center; margin-top:16px;">
+                    <button id="btn-replay-audio" class="btn btn-blue"
+                        style="border-radius:50%; width:64px; height:64px; font-size:24px;">🔊</button>
+                    <p style="margin-top:8px; font-weight:bold; color:var(--text-secondary);">Catch the correct meaning!
+                    </p>
+                </div>
+
+                <div class="floating-container" id="audio-floating-container">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Typing Rush Screen -->
+            <div id="rush-screen" class="screen">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <button class="btn btn-outline" style="padding: 8px 16px; font-size:14px;"
+                        onclick="endRushSession()">Quit</button>
+                    <!-- Evolution Bar -->
+                    <div style="flex:1; margin: 0 16px; text-align: center;">
+                        <span id="pet-stage-name"
+                            style="font-weight: bold; color: var(--primary-green); font-size: 14px;">STAGE: 🥚
+                            Trứng</span>
+                        <div class="progress-container"
+                            style="height: 12px; margin: 4px 0 0 0; background-color: var(--bg-secondary); border: 1px solid var(--border);">
+                            <div class="progress-bar" id="pet-exp-bar"
+                                style="background: var(--gradient-primary); transition: width 0.3s ease; width: 0%;">
+                            </div>
+                        </div>
+                    </div>
+                    <div style="font-size:24px; font-weight:bold; color:var(--primary-orange);">Score: <span
+                            id="rush-score">0</span></div>
+                </div>
+
+                <!-- Pet Track Area -->
+                <div class="pet-track-container" style="margin-top: 52px; position: relative; height: 80px;">
+                    <!-- Cloud/background decor if needed, but keeping it clean -->
+                    <div id="pet-character" class="pet-character"
+                        style="font-size: 56px; position: absolute; bottom: 0; left: 0%; transition: left 0.5s ease-out; transform-origin: bottom center; line-height: 1; z-index: 2;">
+                        🥚</div>
+                </div>
+
+                <!-- Timer Bar -->
+                <div class="progress-container"
+                    style="height: 8px; margin-top: 0px; margin-bottom: 16px; background-color: #FFEBEE;">
+                    <div class="progress-bar" id="rush-timer-bar"
+                        style="background: var(--error); transition: width 0.05s linear; width: 100%;"></div>
+                </div>
+
+                <div class="word-display" style="flex: 0; margin-top: 24px;">
+                    <p class="text-secondary" style="font-weight:bold; text-transform:uppercase;">Quick! Translate</p>
+                    <div class="word-text" id="rush-meaning" style="font-size:40px; color: var(--primary-blue);">Ý nghĩa
+                    </div>
+                </div>
+
+                <div class="spell-input-container">
+                    <input type="text" id="rush-input" class="spell-input" placeholder="Type here..."
+                        autocomplete="off">
+                </div>
+            </div>
+        </div>
+
+        <!-- Feedback Banner -->
+        <div id="feedback-banner" class="feedback-banner">
+            <div class="feedback-message" id="feedback-message-text">Message</div>
+            <!-- <button id="feedback-next-btn" class="btn btn-primary">CONTINUE</button> -->
+        </div>
+
+        <!-- Confetti layer -->
+        <div id="confetti-container"></div>
+    </div>
+
+    <script src="app.js"></script>
+
+</body>
+
+</html>
