@@ -1,5 +1,6 @@
 import React from 'react';
 import { supabase } from '../lib/supabase';
+import { BookOpen } from 'lucide-react';
 
 export default function Login() {
   const handleGoogleLogin = async () => {
@@ -17,18 +18,41 @@ export default function Login() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-bg-tertiary">
-      <div className="bg-white p-10 rounded-3xl shadow-xl max-w-sm w-full text-center">
-        <h1 className="text-4xl font-extrabold text-primary-green mb-2">LingoPlay</h1>
-        <p className="text-text-secondary mb-8 font-medium">Đăng nhập để lưu tiến độ của bạn</p>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-[#F8FAFC] relative overflow-hidden font-sans">
+      {/* Background Decorative Circles */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#2845D6]/5 rounded-full blur-[100px]" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-[#F68048]/5 rounded-full blur-[100px]" />
+      
+      {/* Pattern Overlay */}
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#0D1A63 1px, transparent 1px)', backgroundSize: '30px 30px' }} />
+
+      <div className="bg-white p-8 md:p-12 rounded-[40px] shadow-[0_20px_50px_rgba(13,26,99,0.1)] max-w-sm w-full text-center relative z-10 border border-slate-100 animate-slide-up">
+        <div className="bg-[#E8EBF5] w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 text-[#2845D6] shadow-inner">
+          <BookOpen size={40} strokeWidth={2.5} />
+        </div>
+        
+        <h1 className="text-4xl font-black text-[#0D1A63] mb-3 tracking-tight italic">
+          MIL<span className="text-[#F68048]">EZ</span>
+        </h1>
+        <p className="text-slate-400 mb-10 font-bold uppercase tracking-widest text-xs">
+          Học từ vựng hiệu quả
+        </p>
         
         <button 
           onClick={handleGoogleLogin}
-          className="flex items-center justify-center gap-3 w-full bg-white border-2 border-slate-200 text-slate-700 font-bold py-3 px-6 rounded-2xl hover:bg-slate-50 transition-all shadow-[0_4px_0_#E5E5E5] active:translate-y-1 active:shadow-none"
+          className="group relative flex items-center justify-center gap-4 w-full bg-white border-2 border-slate-100 text-[#0D1A63] font-black py-4 px-6 rounded-2xl hover:border-[#2845D6] hover:bg-[#E8EBF5] transition-all shadow-sm active:translate-y-1"
         >
-          <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-6 h-6" />
+          <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-6 h-6 group-hover:scale-110 transition-transform" />
           Tiếp tục với Google
         </button>
+
+        <p className="mt-10 text-slate-400 text-sm font-medium italic">
+          Nhanh chóng · Đơn giản · Hiệu quả
+        </p>
+      </div>
+
+      <div className="mt-8 text-slate-300 font-bold text-xs uppercase tracking-widest z-10">
+        © 2024 Milez Vocabulary App
       </div>
     </div>
   );
