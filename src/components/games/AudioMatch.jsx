@@ -3,7 +3,7 @@ import { useAppContext } from '../../lib/store'
 import { playSound, fireConfetti, speakWord } from '../../lib/utils'
 
 export default function AudioMatch() {
-  const { appData, setActiveScreen, showFeedback, updateStreakAfterStudy, updateWordStats } = useAppContext();
+  const { appData, setActiveScreen, showFeedback, updateStreakAfterStudy, updateWordStats, updateSetLastStudied, activeSet } = useAppContext();
   
   const [session, setSession] = useState(null);
   const containerRef = useRef(null);
@@ -11,11 +11,12 @@ export default function AudioMatch() {
   const [bubbles, setBubbles] = useState([]);
 
   useEffect(() => {
-    if (appData.vocab.length < 5) return;
+    // Only initialize if there is no active session
+    if (session || appData.vocab.length < 5) return;
     
     let pool = [...appData.vocab].sort(() => Math.random() - 0.5);
     startQuestion(pool, 0, 0, pool.length);
-  }, [appData.vocab]);
+  }, [appData.vocab, session]);
 
   const startQuestion = (words, currentIndex, correctAnswers, totalWords) => {
     if (currentIndex >= words.length) {
@@ -128,6 +129,9 @@ export default function AudioMatch() {
 
   const endSession = (finalSession) => {
       updateStreakAfterStudy();
+      if (activeSet) {
+        updateSetLastStudied(activeSet.id, activeSet.review_count);
+      }
       playSound('completed');
       setActiveScreen('vocab');
   }

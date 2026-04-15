@@ -18,7 +18,7 @@ export default function Sidebar() {
   return (
     <div className="w-[280px] h-screen bg-white border-r-2 border-slate-200 flex flex-col p-6 sticky top-0">
       <div className="mb-10 text-3xl font-extrabold text-primary-green tracking-tight">
-        Lingo<span className="text-text-primary">Play</span>
+        Voca<span className="text-text-primary">Vibe</span>
       </div>
 
       <nav className="flex-1 space-y-2">

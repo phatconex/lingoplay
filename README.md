@@ -1,16 +1,24 @@
-# React + Vite
+# VocaVibe - Học Từ Vựng Hiệu Quả
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+VocaVibe là một ứng dụng học từ vựng thông minh, được thiết kế để giúp bạn ghi nhớ từ vựng tiếng Anh một cách nhanh chóng và vui vẻ thông qua các trò chơi tương tác.
 
-Currently, two official plugins are available:
+## Tính Năng Chính
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Học Flashcard**: Ghi nhớ từ vựng qua các thẻ hình ảnh và âm thanh.
+- **Trắc Nghiệm (Multiple Choice)**: Kiểm tra nhận diện từ vựng.
+- **Chính Tả (Spelling)**: Luyện kỹ năng viết và nghe.
+- **Audio Match**: Kết hợp âm thanh với ý nghĩa.
+- **Typing Rush**: Thử thách gõ phím đua với thời gian.
 
-## React Compiler
+## Công Nghệ Sử Dụng
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Frontend**: React, Vite, TailwindCSS
+- **Backend/Auth**: Supabase
+- **Icons**: Lucide-React
+- **Database**: Supabase PostgreSQL
 
-## Expanding the ESLint configuration
+## Bắt Đầu
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+1. Clone repository
+2. Cài đặt dependencies: `npm install`
+3. Chạy môi trường phát triển: `npm run dev`

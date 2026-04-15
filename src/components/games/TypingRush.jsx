@@ -11,7 +11,7 @@ const PET_STAGES = [
 ];
 
 export default function TypingRush() {
-  const { appData, setActiveScreen, showFeedback } = useAppContext();
+  const { appData, setActiveScreen, showFeedback, updateSetLastStudied, activeSet } = useAppContext();
   
   const [currentWord, setCurrentWord] = useState(null);
   const [score, setScore] = useState(0);
@@ -122,6 +122,9 @@ export default function TypingRush() {
 
   const endSession = () => {
       playSound('wrong');
+      if (activeSet) {
+        updateSetLastStudied(activeSet.id, activeSet.review_count);
+      }
       setIsGameOver(true);
       setInputDisabled(true);
   };

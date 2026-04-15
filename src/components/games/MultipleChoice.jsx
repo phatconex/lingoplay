@@ -3,14 +3,16 @@ import { useAppContext } from '../../lib/store'
 import { playSound, fireConfetti } from '../../lib/utils'
 
 export default function MultipleChoice() {
-  const { appData, setActiveScreen, showFeedback, hideFeedback, updateStreakAfterStudy, updateWordStats } = useAppContext();
+  const { appData, setActiveScreen, showFeedback, hideFeedback, updateStreakAfterStudy, updateWordStats, updateSetLastStudied, activeSet } = useAppContext();
   
   const [session, setSession] = useState(null);
   const lockRef = useRef(false);
+  const activeSetRef = useRef(activeSet);
+  useEffect(() => { activeSetRef.current = activeSet; }, [activeSet]);
 
   useEffect(() => {
-    // init
-    if (appData.vocab.length < 4) return;
+    // Only initialize if there is no active session
+    if (session || appData.vocab.length < 4) return;
     
     let pool = [...appData.vocab].sort(() => Math.random() - 0.5);
     setSession({
@@ -21,7 +23,7 @@ export default function MultipleChoice() {
       wrongWordsThisSession: [],
       currentOptions: generateOptions(pool[0], pool)
     });
-  }, [appData.vocab]);
+  }, [appData.vocab, session]);
 
   function generateOptions(currentWord, pool) {
     if (!currentWord) return [];
@@ -85,6 +87,13 @@ export default function MultipleChoice() {
 
   const endSession = (finalSession) => {
       updateStreakAfterStudy();
+      const currentSet = activeSetRef.current;
+      console.log('endSession called — activeSet from ref:', currentSet);
+      if (currentSet) {
+        updateSetLastStudied(currentSet.id, currentSet.review_count);
+      } else {
+        console.warn('activeSet is null at endSession — SRS not updated');
+      }
       if (finalSession.wrongWordsThisSession.length === 0) {
          playSound('completed');
       }

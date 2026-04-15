@@ -3,15 +3,17 @@ import { useAppContext } from '../../lib/store'
 import { playSound, fireConfetti, speakWord } from '../../lib/utils'
 
 export default function Spelling() {
-  const { appData, setActiveScreen, showFeedback, hideFeedback, updateStreakAfterStudy, updateWordStats } = useAppContext();
+  const { appData, setActiveScreen, showFeedback, hideFeedback, updateStreakAfterStudy, updateWordStats, updateSetLastStudied, activeSet } = useAppContext();
   
   const [session, setSession] = useState(null);
   const [inputValue, setInputValue] = useState('');
   const [inputState, setInputState] = useState(''); // 'correct' | 'wrong' | ''
   const lockRef = useRef(false);
+  const activeSetRef = useRef(activeSet);
+  useEffect(() => { activeSetRef.current = activeSet; }, [activeSet]);
 
   useEffect(() => {
-    if (appData.vocab.length === 0) return;
+    if (session || appData.vocab.length === 0) return;
     
     let pool = [...appData.vocab].sort(() => Math.random() - 0.5);
     setSession({
@@ -21,7 +23,7 @@ export default function Spelling() {
       correctAnswers: 0,
       wrongWordsThisSession: []
     });
-  }, [appData.vocab]);
+  }, [appData.vocab, session]);
 
   const getSpellingDiffHtml = (userAns, correctAns) => {
     let u = userAns.toLowerCase();
@@ -126,6 +128,13 @@ export default function Spelling() {
 
   const endSession = (finalSession) => {
       updateStreakAfterStudy();
+      const currentSet = activeSetRef.current;
+      console.log('Spelling endSession — activeSet from ref:', currentSet);
+      if (currentSet) {
+        updateSetLastStudied(currentSet.id, currentSet.review_count);
+      } else {
+        console.warn('activeSet is null at endSession — SRS not updated');
+      }
       if (finalSession.wrongWordsThisSession.length === 0) {
          playSound('completed');
       }

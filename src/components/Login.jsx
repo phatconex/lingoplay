@@ -7,7 +7,7 @@ export default function Login() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin
+        redirectTo: window.location.origin + '/'
       }
     });
     
@@ -32,7 +32,7 @@ export default function Login() {
         </div>
         
         <h1 className="text-4xl font-black text-[#0D1A63] mb-3 tracking-tight italic">
-          MIL<span className="text-[#F68048]">EZ</span>
+          VOCA<span className="text-[#F68048]">VIBE</span>
         </h1>
         <p className="text-slate-400 mb-10 font-bold uppercase tracking-widest text-xs">
           Học từ vựng hiệu quả
@@ -52,7 +52,7 @@ export default function Login() {
       </div>
 
       <div className="mt-8 text-slate-300 font-bold text-xs uppercase tracking-widest z-10">
-        © 2024 Milez Vocabulary App
+        © 2024 VocaVibe Vocabulary App
       </div>
     </div>
   );
