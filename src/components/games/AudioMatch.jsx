@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useAppContext } from '../../lib/store'
 import { playSound, fireConfetti, speakWord } from '../../lib/utils'
 
 export default function AudioMatch() {
-  const { appData, setActiveScreen, showFeedback, updateStreakAfterStudy, updateWordStats, updateSetLastStudied, activeSet } = useAppContext();
+  const navigate = useNavigate();
+  const { setId } = useParams();
+  const { appData, showFeedback, updateStreakAfterStudy, updateWordStats, updateSetLastStudied, activeSet } = useAppContext();
   
   const [session, setSession] = useState(null);
   const containerRef = useRef(null);
@@ -130,10 +133,10 @@ export default function AudioMatch() {
   const endSession = (finalSession) => {
       updateStreakAfterStudy();
       if (activeSet) {
-        updateSetLastStudied(activeSet.id, activeSet.review_count);
+        updateSetLastStudied(activeSet.id);
       }
       playSound('completed');
-      setActiveScreen('vocab');
+      navigate(`/set/${setId}`);
   }
 
   if (!session || !session.words[session.currentIndex]) return null;
@@ -144,7 +147,7 @@ export default function AudioMatch() {
   return (
     <div className="flex flex-col flex-1 animate-fade-in">
       <div className="flex justify-between items-center mb-4">
-          <button className="btn btn-outline py-2 px-4 text-sm" onClick={() => setActiveScreen('vocab')}>Quit</button>
+          <button className="btn btn-outline py-2 px-4 text-sm" onClick={() => navigate(`/set/${setId}`)}>Quit</button>
           <div className="w-full h-4 bg-bg-tertiary rounded-full overflow-hidden my-4 flex-1 mx-4 !my-0">
               <div className="h-full bg-gradient-primary transition-all duration-300 rounded-full" style={{ width: `${progressPct}%` }}></div>
           </div>

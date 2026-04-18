@@ -37,7 +37,9 @@ export default function CreateSetModal({ isOpen, onClose, onSuccess, userId }) {
       parseItems.push({
         word: parts[0],
         meaning: parts[1],
-        part_of_speech: parts[2] || null
+        part_of_speech: parts[2] || null,
+        example_en: parts[3] || null,
+        example_vi: parts[4] || null
       });
     }
 
@@ -121,13 +123,13 @@ export default function CreateSetModal({ isOpen, onClose, onSuccess, userId }) {
             </label>
             
             <div className="bg-[#E8EBF5] rounded-t-2xl px-5 py-3 border-2 border-b-0 border-slate-200 text-sm font-bold text-[#2845D6] flex flex-col gap-1">
-               <p>Định dạng: Từ tiếng anh | Nghĩa tiếng việt | Loại từ</p>
-               <p className="text-slate-500 text-xs italic">VD: apple | quả táo | noun</p>
+               <p>Định dạng: Từ tiếng anh | Nghĩa tiếng việt | Loại từ | ví dụ tiếng anh | ví dụ tiếng việt</p>
+               <p className="text-slate-500 text-xs italic">VD: apple | quả táo | noun | An apple a day keeps the doctor away | Mỗi ngày ăn một quả táo giúp tránh xa bác sĩ</p>
             </div>
             
             <textarea 
               className="w-full px-5 py-4 text-base border-2 border-slate-200 focus:border-[#2845D6] rounded-b-2xl font-bold outline-none shadow-sm transition-colors min-h-[250px] resize-y text-[#0D1A63]" 
-              placeholder={`beautiful | xinh đẹp | adjective\nrun | chạy | verb\nwatermelon | dưa hấu`}
+              placeholder={`beautiful | xinh đẹp | adjective | She is very beautiful | Cô ấy rất xinh đẹp\nrun | chạy | verb | I run every morning | Tôi chạy bộ mỗi sáng\nwatermelon | dưa hấu | noun | I love watermelon | Tôi thích dưa hấu`}
               value={vocabRaw}
               onChange={(e) => setVocabRaw(e.target.value)}
               disabled={loading}

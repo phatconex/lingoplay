@@ -114,6 +114,7 @@ export default function ManageWordsModal({ set, isOpen, onClose }) {
                     <div className="flex-[1.5] md:px-8">
                         <p className="text-lg font-extrabold text-[#0D1A63]">{item.meaning}</p>
                         {item.example_en && <p className="text-sm italic text-slate-400 mt-1">"{item.example_en}"</p>}
+                        {item.example_vi && <p className="text-xs text-slate-300 font-medium">{item.example_vi}</p>}
                     </div>
 
                     <div className="flex items-center gap-2 mt-4 md:mt-0 md:ml-auto">

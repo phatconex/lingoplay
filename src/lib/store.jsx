@@ -9,14 +9,15 @@ const initialAppData = {
   level: 1,
   streak: 0,
   lastStudyDate: null,
+  completedModes: {},
 };
 
 const AppContext = createContext();
 
 export function AppProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [appData, setAppData] = useState(initialAppData);
-  const [activeScreen, setActiveScreen] = useState('home');
   const [activeSet, setActiveSet] = useState(null);
   const [feedback, setFeedback] = useState({ show: false, title: '', type: '', subtitle: '', duration: 3000 });
 
@@ -30,22 +31,29 @@ export function AppProvider({ children }) {
         console.error(e);
       }
     }
+    // Also load completedModes from its dedicated key
+    try {
+      const savedModes = JSON.parse(localStorage.getItem('vocavibe_completed_modes') || '{}');
+      setAppData(prev => ({ ...prev, completedModes: savedModes }));
+    } catch (e) {}
   }, []);
 
   // Auth state listener
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
+      setAuthLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      setAuthLoading(false);
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  // When user logs in, load streak/xp from Supabase profiles (source of truth)
+  // When user logs in, load streak/xp from Supabase profiles
   useEffect(() => {
     if (!user) return;
     loadProfileFromDB(user.id);
@@ -73,14 +81,13 @@ export function AppProvider({ children }) {
     }
   };
 
-  // Save to localStorage on every change (fast fallback cache)
+  // Save to localStorage on every change
   useEffect(() => {
     if (appData !== initialAppData) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
     }
   }, [appData]);
 
-  // Sync streak/xp to Supabase profiles table
   const syncProfileToDB = async (userId, streak, lastStudyDate, xp) => {
     const { error } = await supabase
       .from('profiles')
@@ -101,7 +108,6 @@ export function AppProvider({ children }) {
 
   const hideFeedback = () => setFeedback(prev => ({ ...prev, show: false }));
 
-  // Called on Home load — resets streak if user missed more than 1 day
   const checkStreak = () => {
     setAppData(prev => {
       const today = new Date();
@@ -111,7 +117,6 @@ export function AppProvider({ children }) {
       const diffDays = lastDate ? Math.floor((today - lastDate) / (1000 * 60 * 60 * 24)) : 0;
 
       if (diffDays > 1) {
-        // Missed a day — reset streak
         if (user) syncProfileToDB(user.id, 0, prev.lastStudyDate, prev.xp);
         return { ...prev, streak: 0 };
       }
@@ -119,11 +124,10 @@ export function AppProvider({ children }) {
     });
   };
 
-  // Called after finishing any study session
   const updateStreakAfterStudy = () => {
     const todayStr = new Date().toDateString();
     setAppData(prev => {
-      if (prev.lastStudyDate === todayStr) return prev; // Already studied today
+      if (prev.lastStudyDate === todayStr) return prev;
       const newStreak = (prev.streak || 0) + 1;
       const next = { ...prev, streak: newStreak, lastStudyDate: todayStr };
       if (user) syncProfileToDB(user.id, newStreak, todayStr, prev.xp);
@@ -147,18 +151,34 @@ export function AppProvider({ children }) {
     });
   };
 
-  const updateSetLastStudied = async (setId, currentCount = 0) => {
-    if (!user) return;
+  const updateSetLastStudied = async (setId) => {
+    if (!user || !setId) return;
 
     const SRS_INTERVALS = [0, 1, 2, 4, 7, 30];
-    const newCount = (currentCount || 0) + 1;
+
+    // Always fetch the latest review_count directly from DB
+    // to avoid stale context state causing incorrect increments
+    const { data: currentData, error: fetchError } = await supabase
+      .from('vocabulary_sets')
+      .select('review_count')
+      .eq('id', setId)
+      .eq('user_id', user.id)
+      .single();
+
+    if (fetchError) {
+      console.error('SRS: Failed to fetch current review_count:', fetchError);
+      return;
+    }
+
+    const currentCount = currentData?.review_count ?? 0;
+    const newCount = currentCount + 1;
     const daysUntilNext = SRS_INTERVALS[newCount] ?? 30;
     const nextReviewDate = new Date();
     nextReviewDate.setDate(nextReviewDate.getDate() + daysUntilNext);
 
-    console.log(`SRS: Set ${setId}, Lần ${newCount}, tiếp theo sau ${daysUntilNext} ngày`);
+    console.log(`SRS: Set ${setId}, ${currentCount} → ${newCount}, tiếp theo sau ${daysUntilNext} ngày`);
 
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('vocabulary_sets')
       .update({
         last_studied: new Date().toISOString(),
@@ -167,26 +187,54 @@ export function AppProvider({ children }) {
         next_review: nextReviewDate.toISOString()
       })
       .eq('id', setId)
-      .eq('user_id', user.id)
-      .select();
+      .eq('user_id', user.id);
 
-    if (error) {
-      console.error('SRS Update Error:', error);
-    } else if (data && data.length > 0) {
-      console.log('SRS updated successfully:', data[0]);
-    } else {
-      console.warn('SRS: No rows updated. Check RLS policies.');
+    if (error) console.error('SRS Update Error:', error);
+  };
+
+  const markGameCompleted = async (setId, gameType) => {
+    if (!setId) return;
+    const today = new Date().toDateString();
+
+    // Read directly from localStorage to avoid stale React state closure
+    const MODES_KEY = 'vocavibe_completed_modes';
+    let progress = {};
+    try {
+        progress = JSON.parse(localStorage.getItem(MODES_KEY) || '{}');
+    } catch (e) {}
+
+    let setProg = progress[setId] ? { ...progress[setId] } : { date: today, mc: false, spelling: false };
+
+    // Reset if it's a new day
+    if (setProg.date !== today) {
+        setProg = { date: today, mc: false, spelling: false };
+    }
+
+    const wasCompletedToday = setProg.mc && setProg.spelling;
+
+    setProg[gameType] = true;
+    progress[setId] = setProg;
+
+    // Persist directly to localStorage immediately
+    localStorage.setItem(MODES_KEY, JSON.stringify(progress));
+    
+    // Also keep appData in sync for reactive UI
+    setAppData(prev => ({ ...prev, completedModes: { ...progress } }));
+
+    // If both modes are now done for first time today, trigger SRS
+    if (setProg.mc && setProg.spelling && !wasCompletedToday) {
+        await updateSetLastStudied(setId);
     }
   };
 
   return (
     <AppContext.Provider value={{
       user, setUser,
+      authLoading,
       appData, setAppData,
-      activeScreen, setActiveScreen,
       activeSet, setActiveSet,
       feedback, showFeedback, hideFeedback,
-      checkStreak, updateStreakAfterStudy, updateWordStats, updateSetLastStudied
+      checkStreak, updateStreakAfterStudy, updateWordStats, updateSetLastStudied, markGameCompleted
     }}>
       {children}
     </AppContext.Provider>

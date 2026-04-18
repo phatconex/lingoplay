@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useAppContext } from '../../lib/store'
 import { playSound, fireConfetti } from '../../lib/utils'
 
 export default function MultipleChoice() {
-  const { appData, setActiveScreen, showFeedback, hideFeedback, updateStreakAfterStudy, updateWordStats, updateSetLastStudied, activeSet } = useAppContext();
+  const navigate = useNavigate();
+  const { setId } = useParams();
+  const { appData, showFeedback, hideFeedback, updateStreakAfterStudy, updateWordStats, markGameCompleted, activeSet } = useAppContext();
   
   const [session, setSession] = useState(null);
   const lockRef = useRef(false);
@@ -43,7 +46,6 @@ export default function MultipleChoice() {
     
     if (opt.id === currentWord.id) {
         playSound('success');
-        showFeedback('Correct!', 'success', 'Good job!', 1500);
         
         let newSession = { ...session, correctAnswers: session.correctAnswers + 1 };
         
@@ -55,13 +57,13 @@ export default function MultipleChoice() {
                 newSession.currentIndex = nextIndex;
                 newSession.currentOptions = generateOptions(session.words[nextIndex], appData.vocab);
                 setSession(newSession);
+                setSelectedOpt(null);
                 hideFeedback();
                 lockRef.current = false;
             }
         }, 1500);
     } else {
         playSound('wrong');
-        showFeedback('Wrong!', 'error', 'Correct answer was marked.', 2000);
         updateWordStats(currentWord.id, false);
         
         let newWords = [...session.words];
@@ -78,6 +80,7 @@ export default function MultipleChoice() {
                 newSession.currentIndex = nextIndex;
                 newSession.currentOptions = generateOptions(newSession.words[nextIndex], appData.vocab);
                 setSession(newSession);
+                setSelectedOpt(null);
                 hideFeedback();
                 lockRef.current = false;
             }
@@ -87,18 +90,22 @@ export default function MultipleChoice() {
 
   const endSession = (finalSession) => {
       updateStreakAfterStudy();
-      const currentSet = activeSetRef.current;
-      console.log('endSession called — activeSet from ref:', currentSet);
-      if (currentSet) {
-        updateSetLastStudied(currentSet.id, currentSet.review_count);
-      } else {
-        console.warn('activeSet is null at endSession — SRS not updated');
+      if (setId) {
+        markGameCompleted(setId, 'mc');
       }
       if (finalSession.wrongWordsThisSession.length === 0) {
          playSound('completed');
       }
-      setActiveScreen('vocab');
+      navigate(`/set/${setId}`);
   }
+
+  const [selectedOpt, setSelectedOpt] = useState(null);
+
+  const handleOptionClickWithResult = (opt) => {
+    if (lockRef.current || !session) return;
+    setSelectedOpt(opt.id);
+    handleOptionClick(opt);
+  };
 
   if (!session || !session.words[session.currentIndex]) return null;
 
@@ -108,7 +115,7 @@ export default function MultipleChoice() {
   return (
     <div className="flex flex-col flex-1 animate-fade-in">
       <div className="flex justify-between items-center mb-4">
-          <button className="btn btn-outline py-2 px-4 text-sm" onClick={() => endSession(session)}>Quit</button>
+          <button className="btn btn-outline py-2 px-4 text-sm" onClick={() => navigate(`/set/${setId}`)}>Quit</button>
           <div className="w-full h-4 bg-bg-tertiary rounded-full overflow-hidden my-4 flex-1 mx-4 !my-0">
               <div className="h-full bg-gradient-primary transition-all duration-300 rounded-full" style={{ width: `${progressPct}%` }}></div>
           </div>
@@ -123,21 +130,30 @@ export default function MultipleChoice() {
 
       <div className="w-full max-w-3xl mx-auto mt-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
-              {session.currentOptions.map((opt, index) => (
-                  <button 
-                      key={opt.id} 
-                      onClick={() => handleOptionClick(opt)}
-                      className="group relative flex items-center bg-white border-2 border-slate-200 rounded-[24px] p-6 font-bold text-lg text-[#0D1A63] cursor-pointer shadow-[0_4px_0_#DDE2F0] hover:border-[#2845D6] hover:shadow-[0_4px_0_#1A2CA3] hover:text-[#2845D6] hover:-translate-y-1 active:translate-y-1 active:shadow-none transition-all outline-none"
+              {session.currentOptions.map((opt, index) => {
+                let cls = 'bg-white border-slate-200 text-[#0D1A63] shadow-[0_4px_0_#DDE2F0] hover:border-[#2845D6] hover:-translate-y-1 hover:shadow-[0_4px_0_#1A2CA3]';
+                if (selectedOpt) {
+                  if (opt.id === currentWord.id) {
+                    cls = 'bg-green-100 border-green-400 text-[#0D1A63] shadow-[0_4px_0_#86EFAC]';
+                  } else if (opt.id === selectedOpt) {
+                    cls = 'bg-red-100 border-red-400 text-[#0D1A63] shadow-[0_4px_0_#FCA5A5]';
+                  } else {
+                    cls = 'bg-white border-slate-200 text-slate-400 opacity-50';
+                  }
+                }
+                return (
+                  <button
+                    key={opt.id}
+                    onClick={() => handleOptionClickWithResult(opt)}
+                    className={`relative flex items-center border-2 rounded-[24px] p-6 font-bold text-lg cursor-pointer transition-all outline-none ${cls}`}
                   >
-                      {/* Số thứ tự trang trí */}
-                      <div className="absolute left-5 w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-sm font-extrabold text-slate-400 group-hover:bg-[#E8EBF5] group-hover:text-[#2845D6] transition-colors">
-                          {index + 1}
-                      </div>
-                      
-                      {/* Text */}
-                      <span className="flex-1 text-center pr-8">{opt.vi}</span>
+                    <div className="absolute left-5 w-8 h-8 rounded-xl bg-black/5 flex items-center justify-center text-sm font-extrabold text-slate-400">
+                        {index + 1}
+                    </div>
+                    <span className="flex-1 text-center pr-8">{opt.vi}</span>
                   </button>
-              ))}
+                );
+              })}
           </div>
       </div>
     </div>

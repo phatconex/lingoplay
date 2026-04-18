@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useAppContext } from '../../lib/store'
 import { playSound } from '../../lib/utils'
 
@@ -11,7 +12,9 @@ const PET_STAGES = [
 ];
 
 export default function TypingRush() {
-  const { appData, setActiveScreen, showFeedback, updateSetLastStudied, activeSet } = useAppContext();
+  const navigate = useNavigate();
+  const { setId } = useParams();
+  const { appData, showFeedback, updateSetLastStudied, activeSet } = useAppContext();
   
   const [currentWord, setCurrentWord] = useState(null);
   const [score, setScore] = useState(0);
@@ -122,9 +125,7 @@ export default function TypingRush() {
 
   const endSession = () => {
       playSound('wrong');
-      if (activeSet) {
-        updateSetLastStudied(activeSet.id, activeSet.review_count);
-      }
+      // Removed updateSetLastStudied here because Game Over in Typing Rush does not mean the set is completely studied.
       setIsGameOver(true);
       setInputDisabled(true);
   };
@@ -151,7 +152,7 @@ export default function TypingRush() {
             
             <div className="flex gap-4">
                 <button 
-                  onClick={() => { clearInterval(timerRef.current); setActiveScreen('vocab'); }}
+                  onClick={() => { clearInterval(timerRef.current); navigate(`/set/${setId}`); }}
                   className="px-8 py-4 rounded-2xl font-bold text-lg bg-slate-200 hover:bg-slate-300 text-slate-700 transition-colors"
                 >
                   Thoát ra
@@ -170,7 +171,7 @@ export default function TypingRush() {
   return (
     <div className="flex flex-col flex-1 animate-fade-in">
       <div className="flex justify-between items-center mb-4">
-          <button className="btn btn-outline py-2 px-4 text-sm font-bold border-2 border-slate-200 text-slate-500 rounded-xl" onClick={() => { clearInterval(timerRef.current); setActiveScreen('vocab'); }}>Quit</button>
+          <button className="btn btn-outline py-2 px-4 text-sm font-bold border-2 border-slate-200 text-slate-500 rounded-xl" onClick={() => { clearInterval(timerRef.current); navigate(`/set/${setId}`); }}>Quit</button>
           
           <div className="flex-1 mx-4 text-center max-w-sm">
               <span className="font-extrabold text-[#F68048] text-sm tracking-wider uppercase">STAGE: {stageInfo.name}</span>

@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useAppContext } from '../../lib/store'
 import { playSound, fireConfetti, speakWord } from '../../lib/utils'
 
 export default function Spelling() {
-  const { appData, setActiveScreen, showFeedback, hideFeedback, updateStreakAfterStudy, updateWordStats, updateSetLastStudied, activeSet } = useAppContext();
+  const navigate = useNavigate();
+  const { setId } = useParams();
+  const { appData, showFeedback, hideFeedback, updateStreakAfterStudy, updateWordStats, markGameCompleted, activeSet } = useAppContext();
   
   const [session, setSession] = useState(null);
   const [inputValue, setInputValue] = useState('');
@@ -24,6 +27,14 @@ export default function Spelling() {
       wrongWordsThisSession: []
     });
   }, [appData.vocab, session]);
+
+  useEffect(() => {
+    // Only focus input on mount, do NOT auto-speak
+    setTimeout(() => {
+      const input = document.querySelector('.spell-input-field');
+      input?.focus();
+    }, 100);
+  }, [session?.currentIndex]);
 
   const getSpellingDiffHtml = (userAns, correctAns) => {
     let u = userAns.toLowerCase();
@@ -77,7 +88,6 @@ export default function Spelling() {
     if (userAns === correctAns) {
         setInputState('correct');
         playSound('success');
-        showFeedback('Perfect!', 'success', '', 800);
         
         let newSession = { ...session, correctAnswers: session.correctAnswers + 1 };
         
@@ -90,7 +100,6 @@ export default function Spelling() {
                 setSession(newSession);
                 setInputValue('');
                 setInputState('');
-                hideFeedback();
                 lockRef.current = false;
             }
         }, 800);
@@ -98,11 +107,6 @@ export default function Spelling() {
         setInputState('wrong');
         playSound('wrong');
         updateWordStats(currentWord.id, false);
-        
-        const diff = getSpellingDiffHtml(userAns, currentWord.en);
-        const subtitle = `<strong style="font-size:32px; background: #FFFFFF; padding: 4px 16px; border-radius: 8px; margin-left: 8px; letter-spacing: 2px; display: inline-block; box-shadow: 0 2px 4px rgba(0,0,0,0.1); line-height: 1.2;">${diff.html}</strong> <span style="margin-left: 12px; font-size: 20px; color: #FF4B4B; font-weight: bold;">(Đúng ${diff.percent}%)</span>`;
-        
-        showFeedback('Incorrect', 'error', subtitle, 2500);
         
         let newWords = [...session.words];
         const insertIndex = Math.min(session.currentIndex + 3, newWords.length);
@@ -119,26 +123,21 @@ export default function Spelling() {
                 setSession(newSession);
                 setInputValue('');
                 setInputState('');
-                hideFeedback();
                 lockRef.current = false;
             }
-        }, 3000);
+        }, 2200);
     }
   }
 
   const endSession = (finalSession) => {
       updateStreakAfterStudy();
-      const currentSet = activeSetRef.current;
-      console.log('Spelling endSession — activeSet from ref:', currentSet);
-      if (currentSet) {
-        updateSetLastStudied(currentSet.id, currentSet.review_count);
-      } else {
-        console.warn('activeSet is null at endSession — SRS not updated');
+      if (setId) {
+        markGameCompleted(setId, 'spelling');
       }
       if (finalSession.wrongWordsThisSession.length === 0) {
          playSound('completed');
       }
-      setActiveScreen('vocab');
+      navigate(`/set/${setId}`);
   }
 
   if (!session || !session.words[session.currentIndex]) return null;
@@ -146,10 +145,16 @@ export default function Spelling() {
   const currentWord = session.words[session.currentIndex];
   const progressPct = (session.correctAnswers / session.totalWords) * 100;
 
+  const inputBg = inputState === 'correct'
+    ? 'border-green-400 bg-green-50 text-[#0D1A63]'
+    : inputState === 'wrong'
+      ? 'border-red-400 bg-red-50 text-[#0D1A63]'
+      : 'border-slate-200 bg-white text-[#0D1A63] focus:border-[#2845D6]';
+
   return (
     <div className="flex flex-col flex-1 animate-fade-in">
       <div className="flex justify-between items-center mb-4">
-          <button className="btn btn-outline py-2 px-4 text-sm" onClick={() => endSession(session)}>Quit</button>
+          <button className="btn btn-outline py-2 px-4 text-sm" onClick={() => navigate(`/set/${setId}`)}>Quit</button>
           <div className="w-full h-4 bg-bg-tertiary rounded-full overflow-hidden my-4 flex-1 mx-4 !my-0">
               <div className="h-full bg-gradient-primary transition-all duration-300 rounded-full" style={{ width: `${progressPct}%` }}></div>
           </div>
@@ -159,13 +164,24 @@ export default function Spelling() {
           <p className="font-bold uppercase tracking-wider mb-2" style={{ color: currentWord.isRetry ? 'var(--primary-orange)' : 'var(--text-secondary)' }}>
               {currentWord.isRetry ? '🔄 LÀM LẠI NÀO' : 'Translate this word'}
           </p>
-          <div className="text-5xl font-extrabold text-primary-blue flex justify-center items-center gap-2 mb-2" style={{ fontSize: '32px' }}>{currentWord.vi}</div>
+          <div className="text-5xl font-extrabold text-[#0D1A63] flex justify-center items-center gap-2 mb-2" style={{ fontSize: '42px' }}>{currentWord.vi}</div>
+          
+          {inputState === 'wrong' && (
+            <p className="text-[#FF4B4B] font-bold text-lg mb-0 mt-2 animate-fade-in flex items-center justify-center gap-2">
+              Đáp án đúng: <span className="font-black text-2xl bg-red-50 px-4 py-1 rounded-2xl border border-red-100">{currentWord.en}</span>
+            </p>
+          )}
+          {inputState === 'correct' && (
+            <p className="text-[#58CC02] font-bold text-lg mb-0 mt-2 animate-fade-in flex items-center justify-center gap-2">
+              ✅ Chính xác!
+            </p>
+          )}
       </div>
 
       <div className="w-full max-w-xl mx-auto flex flex-col gap-4 mt-8 mb-auto px-4">
           <input 
             type="text" 
-            className={`w-full px-6 py-4 text-2xl border-2 border-slate-200 focus:border-[#2845D6] rounded-2xl text-center font-bold outline-none shadow-sm transition-colors spell-input ${inputState}`} 
+            className={`spell-input-field w-full px-6 py-4 text-2xl border-2 rounded-2xl text-center font-bold outline-none shadow-sm transition-colors ${inputBg}`} 
             placeholder="Type in English..." 
             autoComplete="off"
             value={inputValue}
@@ -174,10 +190,12 @@ export default function Spelling() {
                if(e.key === 'Enter') checkSpelling();
             }}
             autoFocus
+            disabled={!!inputState}
           />
           <button 
-             className="w-full bg-[#2845D6] hover:bg-[#1A2CA3] text-white px-6 py-4 rounded-2xl font-bold text-xl transition-all shadow-[0_4px_0_#0D1A63] active:translate-y-1 active:shadow-none" 
+             className="w-full bg-[#2845D6] hover:bg-[#1A2CA3] text-white px-6 py-4 rounded-2xl font-bold text-xl transition-all shadow-[0_4px_0_#0D1A63] active:translate-y-1 active:shadow-none disabled:opacity-50" 
              onClick={checkSpelling}
+             disabled={!!inputState}
           >
              CHECK
           </button>

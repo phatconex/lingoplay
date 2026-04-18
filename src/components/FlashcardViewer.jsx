@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Volume2, RotateCcw, Shuffle, Loader2, ArrowLeft } from 'lucide-react';
-import { useAppContext } from '../lib/store';
 
 export default function FlashcardViewer({ words: initialWords, loading }) {
+  const navigate = useNavigate();
+  const { setId } = useParams();
   const [words, setWords] = useState(initialWords || []);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [isShuffled, setIsShuffled] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
   const [slideDir, setSlideDir] = useState(null); // 'left' | 'right' | null
-  const { setActiveScreen } = useAppContext();
 
   // Touch swipe state
   const touchStartX = useRef(null);
@@ -23,9 +24,9 @@ export default function FlashcardViewer({ words: initialWords, loading }) {
     setIsFinished(false);
   }, [initialWords]);
 
-  // Auto-voice on card change
+  // Auto-voice on card change and flip back to front
   useEffect(() => {
-    if (words && words[currentIndex] && !isFinished) {
+    if (words && words[currentIndex] && !isFinished && !isFlipped) {
       // Small delay to let card animation start
       const timer = setTimeout(() => {
         const u = new SpeechSynthesisUtterance(words[currentIndex].word);
@@ -34,7 +35,7 @@ export default function FlashcardViewer({ words: initialWords, loading }) {
       }, 300);
       return () => clearTimeout(timer);
     }
-  }, [currentIndex, isFinished, words]);
+  }, [currentIndex, isFinished, words, isFlipped]);
 
   const playCompletionSound = () => {
     const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3');
@@ -127,7 +128,7 @@ export default function FlashcardViewer({ words: initialWords, loading }) {
       <div className="w-full h-[340px] md:h-[420px] bg-[#1A1D28] rounded-[32px] flex flex-col items-center justify-center text-white border-2 border-slate-700 p-8 text-center">
         <h3 className="text-2xl font-bold mb-3">Bộ từ vựng này rỗng!</h3>
         <p className="text-slate-400 mb-6 font-medium">Hãy thêm từ vựng qua mục "Chỉnh sửa từ vựng"</p>
-        <button onClick={() => setActiveScreen('home')} className="bg-slate-700 hover:bg-slate-600 px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all">
+        <button onClick={() => navigate('/')} className="bg-slate-700 hover:bg-slate-600 px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all">
           <ArrowLeft size={20} /> Quay lại thư viện
         </button>
       </div>
@@ -146,7 +147,7 @@ export default function FlashcardViewer({ words: initialWords, loading }) {
 
   if (isFinished) {
     return (
-      <div className="w-full max-w-3xl animate-fade-in">
+      <div className="w-full max-w-3xl animate-fade-in mx-auto mt-8">
         <div className="bg-[#0D1A63] rounded-[32px] p-10 md:p-16 text-center shadow-2xl relative overflow-hidden flex flex-col items-center">
             {/* Background pattern */}
             <div className="absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none">
@@ -180,23 +181,30 @@ export default function FlashcardViewer({ words: initialWords, loading }) {
   }
 
   return (
-    <div className="w-full flex flex-col items-center select-none pb-4">
+    <div className="w-full flex flex-col items-center select-none pb-4 flex-1 animate-fade-in mt-4">
 
-      {/* Progress bar + counter */}
-      <div className="w-full max-w-3xl mb-5">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-extrabold text-slate-400">
-            {currentIndex + 1} <span className="font-medium text-slate-300">/ {words.length}</span>
-          </span>
-          <span className="text-sm font-bold text-[#2845D6]">
-            {Math.round(progress)}%
-          </span>
-        </div>
-        <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-[#2845D6] rounded-full transition-all duration-500"
-            style={{ width: `${progress}%` }}
-          />
+      {/* Header with Quit & Progress */}
+      <div className="w-full max-w-3xl mb-8 flex items-center gap-6">
+        {setId && (
+          <button className="btn btn-outline py-2 px-4 text-sm shrink-0" onClick={() => navigate(`/set/${setId}`)}>
+            Quit
+          </button>
+        )}
+        <div className="flex-1">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-extrabold text-slate-400">
+              {currentIndex + 1} <span className="font-medium text-slate-300">/ {words.length}</span>
+            </span>
+            <span className="text-sm font-bold text-[#2845D6]">
+              {Math.round(progress)}%
+            </span>
+          </div>
+          <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-[#2845D6] rounded-full transition-all duration-500"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
         </div>
       </div>
 

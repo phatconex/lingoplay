@@ -74,6 +74,7 @@
 
 /* Animations */
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
@@ -112,6 +113,10 @@
 
 .animate-fade-in {
     animation: fadeIn 0.3s ease;
+}
+
+.animate-slide-up {
+    animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 /* Floating Confetti from app.js */
@@ -174,6 +179,14 @@ textarea:focus {
 .backface-hidden {
   backface-visibility: hidden;
 }
+@keyframes bounce-subtle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+.animate-bounce-subtle {
+  animation: bounce-subtle 2s ease-in-out infinite;
+}
+
 .rotate-y-180 {
   transform: rotateY(180deg);
 }

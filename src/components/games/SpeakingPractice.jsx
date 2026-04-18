@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useAppContext } from '../../lib/store'
 import { playSound, fireConfetti, speakWord } from '../../lib/utils'
 
 export default function SpeakingPractice() {
-  const { appData, setActiveScreen, updateStreakAfterStudy } = useAppContext();
+  const navigate = useNavigate();
+  const { setId } = useParams();
+  const { appData, updateStreakAfterStudy } = useAppContext();
   
   const [session, setSession] = useState(null);
   const [flipped, setFlipped] = useState(false);
@@ -56,7 +59,7 @@ export default function SpeakingPractice() {
       updateStreakAfterStudy();
       fireConfetti();
       playSound('completed');
-      setActiveScreen('vocab');
+      navigate(`/set/${setId}`);
   }
 
   if (!session || !session.words[session.currentIndex]) return null;
@@ -67,7 +70,7 @@ export default function SpeakingPractice() {
   return (
     <div className="flex flex-col flex-1 animate-fade-in">
       <div className="flex justify-between items-center mb-4">
-          <button className="btn btn-outline py-2 px-4 text-sm" onClick={endSession}>Quit</button>
+          <button className="btn btn-outline py-2 px-4 text-sm" onClick={() => navigate(`/set/${setId}`)}>Quit</button>
           <div className="w-full h-4 bg-bg-tertiary rounded-full overflow-hidden my-4 flex-1 mx-4 !my-0">
               <div className="h-full bg-gradient-primary transition-all duration-300 rounded-full" style={{ width: `${progressPct}%` }}></div>
           </div>
