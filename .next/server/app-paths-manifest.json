@@ -1,0 +1,11 @@
+{
+  "/(auth)/login/page": "app/(auth)/login/page.js",
+  "/(dashboard)/page": "app/(dashboard)/page.js",
+  "/(dashboard)/review/page": "app/(dashboard)/review/page.js",
+  "/(dashboard)/set/[setId]/page": "app/(dashboard)/set/[setId]/page.js",
+  "/(dashboard)/set/[setId]/practice/page": "app/(dashboard)/set/[setId]/practice/page.js",
+  "/_global-error/page": "app/_global-error/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/pronunciation/route": "app/api/pronunciation/route.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js"
+}

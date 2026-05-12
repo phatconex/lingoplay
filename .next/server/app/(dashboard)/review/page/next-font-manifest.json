@@ -1,0 +1,12 @@
+{
+  "pages": {},
+  "app": {
+    "[project]/src/app/(dashboard)/review/page": [
+      "static/media/e6d00ff86ef9e699-s.p.0lcb62h0-.jh3.woff2",
+      "static/media/07454f8ad8aaac57-s.p.0tqkxa-w3pk~c.woff2",
+      "static/media/83afe278b6a6bb3c-s.p.0q-301v4kxxnr.woff2"
+    ]
+  },
+  "appUsingSizeAdjust": true,
+  "pagesUsingSizeAdjust": false
+}

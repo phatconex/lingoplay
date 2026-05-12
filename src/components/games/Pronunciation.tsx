@@ -215,13 +215,13 @@ export default function Pronunciation() {
       const processor = audioCtx.createScriptProcessor(4096, 1, 1);
       processorRef.current = processor;
       
-      processor.onaudioprocess = (e) => {
+      processor.onaudioprocess = (e: any) => {
         const inputData = e.inputBuffer.getChannelData(0);
         // We must make a copy because inputBuffer is recycled
         recordedSamplesRef.current.push(new Float32Array(inputData));
       };
 
-      sourceRef.current.connect(processor);
+      sourceRef.current!.connect(processor);
       processor.connect(audioCtx.destination);
 
       setStatus('recording');
